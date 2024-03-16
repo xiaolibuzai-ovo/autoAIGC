@@ -6,8 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
+	"path/filepath"
+	"time"
 )
 
 func ContainsString(v string, vv []string) bool {
@@ -115,4 +118,31 @@ func handleErrorResp(resp *http.Response) error {
 		Message: "http fail",
 	}
 	return fmt.Errorf("%v", apiError)
+}
+
+func SaveFileLocal(videoURL string, directory string) (string, error) {
+	videoID := fmt.Sprintf("%d.mp4", time.Now().Unix())
+	// Create full video path
+	videoPath := filepath.Join(directory, videoID)
+
+	// Make GET request to fetch video content
+	response, err := http.Get(videoURL)
+	if err != nil {
+		return "", err
+	}
+	defer response.Body.Close()
+
+	// Read video content
+	videoContent, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return "", err
+	}
+
+	// Create video file and write content
+	err = ioutil.WriteFile(videoPath, videoContent, 0644)
+	if err != nil {
+		return "", err
+	}
+
+	return videoPath, nil
 }

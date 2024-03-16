@@ -5,19 +5,7 @@ import (
 	"fmt"
 	"github.com/bytedance/sonic"
 	"github.com/sashabaranov/go-openai"
-	"log"
-	"os"
 )
-
-var gptClient *openai.Client
-
-func initGptClient() {
-	apiKey := os.Getenv("OPENAI_API_KEY")
-	if len(apiKey) <= 0 {
-		log.Panic("OPENAI_API_KEY is not set")
-	}
-	gptClient = openai.NewClient(apiKey)
-}
 
 /*
 GenerateSubjectText 生成主题文字
@@ -28,6 +16,7 @@ language: 语言
 return: 根据主题生成的内容
 */
 func GenerateSubjectText(ctx context.Context, aiModel string, subject string, language string) (string, error) {
+	client := GetOpenaiClient()
 	request := openai.ChatCompletionRequest{
 		Model:       aiModel,
 		Temperature: 0.8,
@@ -60,7 +49,7 @@ func GenerateSubjectText(ctx context.Context, aiModel string, subject string, la
 			},
 		},
 	}
-	response, err := gptClient.CreateChatCompletion(ctx, request)
+	response, err := client.CreateChatCompletion(ctx, request)
 	if err != nil {
 		return "", err
 	} else if len(response.Choices) < 1 {
@@ -80,6 +69,7 @@ subjectText: 生成的主题内容
 return: 主题视频搜索词slices
 */
 func GenerateSearchTermsBySubject(ctx context.Context, aiModel string, amount int64, subject string, subjectText string) ([]string, error) {
+	client := GetOpenaiClient()
 	request := openai.ChatCompletionRequest{
 		Model:       aiModel,
 		Temperature: 0.8,
@@ -111,7 +101,7 @@ func GenerateSearchTermsBySubject(ctx context.Context, aiModel string, amount in
 			},
 		},
 	}
-	response, err := gptClient.CreateChatCompletion(ctx, request)
+	response, err := client.CreateChatCompletion(ctx, request)
 	if err != nil {
 		return nil, err
 	} else if len(response.Choices) < 1 {

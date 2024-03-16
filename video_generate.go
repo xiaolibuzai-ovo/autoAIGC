@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/sashabaranov/go-openai"
+	"strings"
 	"sync"
 )
 
@@ -20,6 +21,8 @@ const ( // 参数先写死
 
 	searchVideoLimit = 10 // 搜索的视频数量
 	MinDuration      = 10 // 视频最少持续时间 秒为单位
+
+	saveVideoDir = "./tmp/video"
 )
 
 const ( // 自动上传相关
@@ -32,6 +35,8 @@ func GenerateVideo(ctx context.Context) (err error) {
 		subjectText string
 		searchTerms []string
 		videos      []string
+		localVideos []string
+		localVoices []string
 
 		wg sync.WaitGroup
 		mx sync.Mutex
@@ -65,14 +70,35 @@ func GenerateVideo(ctx context.Context) (err error) {
 		}()
 	}
 	wg.Wait()
+	if len(videos) == 0 {
+		return
+	}
 	// video url去重
 	videos = RemoveRepetitionString(videos)
 
 	// video保存本地
-
+	for _, video := range videos {
+		localVideoUrl, err := SaveFileLocal(video, saveVideoDir)
+		if err != nil {
+			continue
+		}
+		localVideos = append(localVideos, localVideoUrl)
+	}
 	// 分割主题内容,生成tts
-
-	// 语音转换字幕 srt
+	sentences := strings.Split(subjectText, ". ")
+	for _, sentence := range sentences {
+		if len(sentence) == 0 {
+			// remove empty
+			continue
+		}
+		// 语音转换字幕 srt
+		ttsUrl, err := TTS(ctx, "", sentence)
+		if err != nil {
+			return err
+		}
+		localVoices = append(localVoices, ttsUrl)
+	}
+	// 合成tts音频
 
 	// 合成连接视频
 
