@@ -1,11 +1,14 @@
 module github.com/xiaolibuzai-ovo/autoAIGC
 
-go 1.21.3
-
-require github.com/gin-gonic/gin v1.9.1
+go 1.21
 
 require (
-	github.com/bytedance/sonic v1.9.1 // indirect
+	github.com/bytedance/sonic v1.9.1
+	github.com/gin-gonic/gin v1.9.1
+	github.com/sashabaranov/go-openai v1.20.4
+)
+
+require (
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
