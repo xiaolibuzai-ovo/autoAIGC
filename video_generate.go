@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/sashabaranov/go-openai"
 	"strings"
 	"sync"
+	"time"
 )
 
 const ( // 参数先写死
@@ -36,7 +38,7 @@ func GenerateVideo(ctx context.Context) (err error) {
 		searchTerms []string
 		videos      []string
 		localVideos []string
-		localVoices []string
+		localAudios []string
 
 		wg sync.WaitGroup
 		mx sync.Mutex
@@ -78,7 +80,7 @@ func GenerateVideo(ctx context.Context) (err error) {
 
 	// video保存本地
 	for _, video := range videos {
-		localVideoUrl, err := SaveFileLocal(video, saveVideoDir)
+		localVideoUrl, err := SaveFileLocal(video, saveVideoDir, fmt.Sprintf("%d.mp4", time.Now().Unix()))
 		if err != nil {
 			continue
 		}
@@ -96,10 +98,14 @@ func GenerateVideo(ctx context.Context) (err error) {
 		if err != nil {
 			return err
 		}
-		localVoices = append(localVoices, ttsUrl)
+		localAudios = append(localAudios, ttsUrl)
 	}
 	// 合成tts音频
-
+	mergeAudioUrl, err := MergeAudio(ctx, localAudios)
+	if err != nil {
+		return err
+	}
+	_ = mergeAudioUrl
 	// 合成连接视频
 
 	// 融合语音和视频

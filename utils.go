@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/url"
 	"path/filepath"
-	"time"
 )
 
 func ContainsString(v string, vv []string) bool {
@@ -120,13 +119,12 @@ func handleErrorResp(resp *http.Response) error {
 	return fmt.Errorf("%v", apiError)
 }
 
-func SaveFileLocal(videoURL string, directory string) (string, error) {
-	videoID := fmt.Sprintf("%d.mp4", time.Now().Unix())
+func SaveFileLocal(fileUrl string, directory string, fileName string) (string, error) {
 	// Create full video path
-	videoPath := filepath.Join(directory, videoID)
+	videoPath := filepath.Join(directory, fileName)
 
 	// Make GET request to fetch video content
-	response, err := http.Get(videoURL)
+	response, err := http.Get(fileUrl)
 	if err != nil {
 		return "", err
 	}
