@@ -34,7 +34,7 @@ func TTS(ctx context.Context, voice string, content string) (voiceUrl string, er
 	if err != nil {
 		return
 	}
-	name := fmt.Sprintf("./tmp/voice/%d.mp3", time.Now().Unix())
+	name := fmt.Sprintf("./tmp/voice/%d.mp3", time.Now().UnixNano())
 	// save buf to file as mp3
 	err = os.WriteFile(name, buf, 777)
 	if err != nil {
@@ -135,7 +135,7 @@ func MergeAudio(ctx context.Context, audioUrls []string) (audioUrl string, err e
 			// 转换完成
 			link := resp0.Data.DownloadLink
 			// 下载本地
-			localAudio, err := SaveFileLocal(link, "./tmp/audio/", fmt.Sprintf("%d.mp3", time.Now().Unix()))
+			localAudio, err := SaveFileLocal(link, "./tmp/audio/", fmt.Sprintf("%d.mp3", time.Now().UnixNano()))
 			if err != nil {
 				return "", err
 			}

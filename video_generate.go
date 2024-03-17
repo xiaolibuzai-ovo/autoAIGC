@@ -44,6 +44,7 @@ func GenerateVideo(ctx context.Context) (err error) {
 
 		mergeAudioUrl string
 		subtitleUrl   string
+		mergeVideoUrl string
 
 		wg sync.WaitGroup
 		mx sync.Mutex
@@ -85,7 +86,7 @@ func GenerateVideo(ctx context.Context) (err error) {
 
 	// video保存本地
 	for _, video := range videos {
-		localVideoUrl, err := SaveFileLocal(video, saveVideoDir, fmt.Sprintf("%d.mp4", time.Now().Unix()))
+		localVideoUrl, err := SaveFileLocal(video, saveVideoDir, fmt.Sprintf("%d.mp4", time.Now().UnixNano()))
 		if err != nil {
 			continue
 		}
@@ -115,11 +116,15 @@ func GenerateVideo(ctx context.Context) (err error) {
 	if err != nil {
 		return err
 	}
+	// 合并视频
+	mergeVideoUrl, err = MergeVideo(ctx, localVideos)
+	if err != nil {
+		return err
+	}
+
 	_ = mergeAudioUrl
 	_ = subtitleUrl
-
-	// 合并视频
-
+	_ = mergeVideoUrl
 	// 融合语音和视频
 
 	// 生成视频元数据信息(如标题/分类等)

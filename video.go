@@ -6,7 +6,10 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
+	"time"
 )
 
 type PexelsVideoResponse struct {
@@ -100,6 +103,56 @@ func SearchVideosInPexels(ctx context.Context, term string, limit int, minDurati
 			}
 		}
 
+	}
+	return
+}
+
+/*
+MergeVideo 使用ffmpeg将多个视频合成为一个
+
+videos: 要合成的视频的本地地址
+
+return: 合成后视频的本地地址
+
+example:
+ffmpeg -i a.mp4 -c copy -bsf:v h264_mp4toannexb -f mpegts 1.ts
+ffmpeg -i b.mp4 -c copy -bsf:v h264_mp4toannexb -f mpegts 2.ts
+ffmpeg -i "concat:1.ts|2.ts" -c copy -bsf:a aac_adtstoasc -movflags +faststart ts.mp4
+*/
+func MergeVideo(ctx context.Context, videos []string) (mergeVideoUrl string, err error) {
+	//mp4->ts merge ts ts->mp4
+	var (
+		tsDir         = "./tmp/ts/"
+		mergeVideoDir = "./tmp/mergeVideo/"
+
+		tsList []string
+	)
+	for _, video := range videos {
+		tmpTs := fmt.Sprintf("%s%d.ts", tsDir, time.Now().UnixNano())
+		err = os.MkdirAll(filepath.Dir(tmpTs), os.ModePerm)
+		if err != nil {
+			return
+		}
+		// mp4转ts
+		cmd := fmt.Sprintf("ffmpeg -i %s -c copy -bsf:v h264_mp4toannexb -f mpegts %s", video, tmpTs)
+		command := exec.Command("/bin/bash", "-c", cmd)
+		_, err = command.CombinedOutput()
+		if err != nil {
+			return
+		}
+		tsList = append(tsList, tmpTs)
+	}
+
+	// 合并所有的ts 并转为mp4
+	allTs := strings.Join(tsList, "|")
+	// mp4转ts
+	mergeVideoUrl = fmt.Sprintf("%s%d.mp4", mergeVideoDir, time.Now().UnixNano())
+	err = os.MkdirAll(filepath.Dir(mergeVideoUrl), os.ModePerm)
+	cmd := fmt.Sprintf(`ffmpeg -i "concat:%s" -c copy -bsf:a aac_adtstoasc -movflags +faststart %s`, allTs, mergeVideoUrl)
+	command := exec.Command("/bin/bash", "-c", cmd)
+	_, err = command.CombinedOutput()
+	if err != nil {
+		return
 	}
 	return
 }

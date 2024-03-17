@@ -36,7 +36,7 @@ func GenerateSubtitlesLocally(ctx context.Context, sentences []string, audios []
 		startTime = endTime
 	}
 
-	fileUrl := fmt.Sprintf("%d.srt", time.Now().Unix())
+	fileUrl := fmt.Sprintf("%d.srt", time.Now().UnixNano())
 	videoPath := filepath.Join(outputPath, fileUrl)
 
 	// 创建文件所在的文件夹路径
