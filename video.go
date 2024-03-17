@@ -103,11 +103,3 @@ func SearchVideosInPexels(ctx context.Context, term string, limit int, minDurati
 	}
 	return
 }
-
-/*
-GenerateSubtitle 生成字幕
-audio 音频路径
-*/
-func GenerateSubtitle(ctx context.Context, audio string) {
-
-}

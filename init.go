@@ -12,7 +12,7 @@ func GetOpenaiClient() *openai.Client {
 	return openaiClient
 }
 
-func initGptClient() {
+func initOpenaiClient() {
 	apiKey := os.Getenv("OPENAI_API_KEY")
 	if len(apiKey) <= 0 {
 		log.Panic("OPENAI_API_KEY is not set")

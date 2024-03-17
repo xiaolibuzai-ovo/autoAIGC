@@ -10,6 +10,9 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -82,18 +85,19 @@ func MergeAudio(ctx context.Context, audioUrls []string) (audioUrl string, err e
 		file, err := os.Open(audioUrl)
 		if err != nil {
 			fmt.Println(err)
-			return
+			return "", err
 		}
 
 		// 创建一个文件表单字段并将文件内容写入其中
 		part, err := writer.CreateFormFile(fmt.Sprint(bodyIdx), file.Name())
 		if err != nil {
 			fmt.Println(err)
-			return
+			return "", err
+
 		}
 		if _, err = io.Copy(part, file); err != nil {
 			fmt.Println(err)
-			return
+			return "", err
 		}
 
 		file.Close()
@@ -138,4 +142,31 @@ func MergeAudio(ctx context.Context, audioUrls []string) (audioUrl string, err e
 			return localAudio, nil
 		}
 	}
+}
+
+/*
+GetAudioDuration 利用ffmpeg获取音频持续时间
+*/
+func GetAudioDuration(audio string) time.Duration {
+	// 格式转换 ffmpeg -i xxxx  2>&1 | grep 'Duration' | cut -d ' ' -f 4 | sed s/,//
+	cmd := fmt.Sprintf("ffmpeg -i %s 2>&1 | grep 'Duration' | cut -d ' ' -f 4 | sed s/,//", audio)
+	command := exec.Command("/bin/bash", "-c", cmd)
+	res, err := command.CombinedOutput()
+	if err != nil {
+		fmt.Println(err)
+	}
+	body := string(res)
+
+	parts := strings.Split(body, ":")
+	hours, _ := strconv.Atoi(parts[0])
+	minutes, _ := strconv.Atoi(parts[1])
+
+	secondsAndMilliseconds := strings.Split(parts[2], ".")
+
+	seconds, _ := strconv.Atoi(secondsAndMilliseconds[0])
+	milliseconds, _ := strconv.ParseFloat("0."+strings.TrimSpace(secondsAndMilliseconds[1]), 64)
+	totalSeconds := float64(hours*3600+minutes*60+seconds) + milliseconds
+	duration := time.Duration(totalSeconds * float64(time.Second))
+
+	return duration
 }

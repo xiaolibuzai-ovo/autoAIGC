@@ -28,8 +28,10 @@ const ( // 参数先写死
 )
 
 const ( // 自动上传相关
-	AutoUploadTiktok = false
-	AutoUploadXhs    = false
+	AutoUploadTiktok   = false
+	AutoUploadDouYi    = false
+	AutoUploadYouTube  = false
+	AutoUploadBiliBili = false
 )
 
 func GenerateVideo(ctx context.Context) (err error) {
@@ -39,6 +41,9 @@ func GenerateVideo(ctx context.Context) (err error) {
 		videos      []string
 		localVideos []string
 		localAudios []string
+
+		mergeAudioUrl string
+		subtitleUrl   string
 
 		wg sync.WaitGroup
 		mx sync.Mutex
@@ -101,12 +106,19 @@ func GenerateVideo(ctx context.Context) (err error) {
 		localAudios = append(localAudios, ttsUrl)
 	}
 	// 合成tts音频
-	mergeAudioUrl, err := MergeAudio(ctx, localAudios)
+	mergeAudioUrl, err = MergeAudio(ctx, localAudios)
+	if err != nil {
+		return err
+	}
+	// 生成字幕
+	subtitleUrl, err = GenerateSubtitlesLocally(ctx, sentences, localVideos, "./tmp/Subtitles/")
 	if err != nil {
 		return err
 	}
 	_ = mergeAudioUrl
-	// 合成连接视频
+	_ = subtitleUrl
+
+	// 合并视频
 
 	// 融合语音和视频
 
