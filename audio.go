@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -34,13 +35,13 @@ func TTS(ctx context.Context, voice string, content string) (voiceUrl string, er
 	if err != nil {
 		return
 	}
-	name := fmt.Sprintf("./tmp/voice/%d.mp3", time.Now().UnixNano())
+	voiceUrl = fmt.Sprintf("./tmp/audio/%d.mp3", time.Now().UnixNano())
 	// save buf to file as mp3
-	err = os.WriteFile(name, buf, 777)
+	err = os.WriteFile(voiceUrl, buf, 777)
 	if err != nil {
 		return
 	}
-	return name, nil
+	return voiceUrl, nil
 }
 
 type MergeAudioResponse struct {
@@ -80,9 +81,9 @@ func MergeAudio(ctx context.Context, audioUrls []string) (audioUrl string, err e
 
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-	for _, audioUrl := range audioUrls {
+	for _, audio := range audioUrls {
 		// 打开要上传的文件
-		file, err := os.Open(audioUrl)
+		file, err := os.Open(audio)
 		if err != nil {
 			fmt.Println(err)
 			return "", err
@@ -103,10 +104,8 @@ func MergeAudio(ctx context.Context, audioUrls []string) (audioUrl string, err e
 		file.Close()
 		bodyIdx++
 	}
-
 	// 关闭multipart writer
 	if err = writer.Close(); err != nil {
-		fmt.Println(err)
 		return
 	}
 	request, err := BuildRequest(ctx, http.MethodGet, "https://api.products.aspose.app/audio/merger/api/merger", body, header, param)
@@ -116,6 +115,8 @@ func MergeAudio(ctx context.Context, audioUrls []string) (audioUrl string, err e
 	var resp MergeAudioResponse
 	err = SendRequest(request, &http.Client{}, &resp)
 	if err != nil {
+		fmt.Println(err)
+		fmt.Println(111)
 		return "", err
 	}
 	requestId := resp.Data.FileRequestId
@@ -124,6 +125,7 @@ func MergeAudio(ctx context.Context, audioUrls []string) (audioUrl string, err e
 	for {
 		req, err := BuildRequest(ctx, http.MethodGet, "https://api.products.aspose.app/audio/merger/api/merger/HandleStatus", nil, header, param)
 		if err != nil {
+			fmt.Println(err)
 			return "", err
 		}
 		var resp0 HandleStatusResponse
@@ -142,6 +144,34 @@ func MergeAudio(ctx context.Context, audioUrls []string) (audioUrl string, err e
 			return localAudio, nil
 		}
 	}
+}
+
+func MergeAudioByFfmpeg(audioUrls []string) (mergeAudioUrl string, err error) {
+	var (
+		mergeAudioDir = "./tmp/mergeAudio/"
+	)
+	// 给url加上绝对路径
+	pwd, err := os.Getwd()
+	if err != nil {
+		return
+	}
+	for i, audioUrl := range audioUrls {
+		audioUrls[i] = fmt.Sprintf("%s%s", pwd, audioUrl)
+	}
+	// 合并所有文件
+	txtFile, err := CreateTxtFileWithDynamicContent(audioUrls)
+	if err != nil {
+		return
+	}
+	mergeAudioUrl = fmt.Sprintf("%s%d.mp3", mergeAudioDir, time.Now().UnixNano())
+	err = os.MkdirAll(filepath.Dir(mergeAudioUrl), os.ModePerm)
+	cmd := fmt.Sprintf(`ffmpeg -f concat -safe 0 -i %s -c copy %s`, txtFile, mergeAudioUrl)
+	command := exec.Command("/bin/bash", "-c", cmd)
+	_, err = command.CombinedOutput()
+	if err != nil {
+		return
+	}
+	return
 }
 
 /*

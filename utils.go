@@ -9,7 +9,10 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
+	"path"
 	"path/filepath"
+	"time"
 )
 
 func ContainsString(v string, vv []string) bool {
@@ -143,4 +146,28 @@ func SaveFileLocal(fileUrl string, directory string, fileName string) (string, e
 	}
 
 	return videoPath, nil
+}
+
+func CreateTxtFileWithDynamicContent(lines []string) (string, error) {
+	// 创建目录 ./tmp/audioText，如果不存在的话
+	dir := "./tmp/audioText"
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return "", err
+	}
+	// 获取当前时间戳
+	timestamp := time.Now().UnixNano()
+	// 构建文件路径
+	fileName := fmt.Sprintf("audioText_%d.txt", timestamp)
+	filePath := path.Join(dir, fileName)
+	// 将切片中的字符串连接成一个字符串，每个字符串后面加上换行符
+	content := ""
+	for _, line := range lines {
+		content += "file " + line + "\n"
+	}
+	// 创建并写入文件
+	if err := ioutil.WriteFile(filePath, []byte(content), 0644); err != nil {
+		return "", err
+	}
+	// 返回文件路径
+	return filePath, nil
 }

@@ -14,3 +14,13 @@ func TestSaveFileLocal(t *testing.T) {
 	}
 	fmt.Println(local)
 }
+
+func TestCreateTxtFileWithDynamicContent(t *testing.T) {
+	// 创建带有时间戳的文本文件并写入内容
+	path, err := CreateTxtFileWithDynamicContent([]string{"file 'a.mp3'", "file 'b.mp3'"})
+	if err != nil {
+		panic(err)
+	}
+	// 输出文件的路径
+	fmt.Printf("文件已创建于: %s\n", path)
+}

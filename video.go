@@ -148,6 +148,9 @@ func MergeVideo(ctx context.Context, videos []string) (mergeVideoUrl string, err
 	// mp4转ts
 	mergeVideoUrl = fmt.Sprintf("%s%d.mp4", mergeVideoDir, time.Now().UnixNano())
 	err = os.MkdirAll(filepath.Dir(mergeVideoUrl), os.ModePerm)
+	if err != nil {
+		return
+	}
 	cmd := fmt.Sprintf(`ffmpeg -i "concat:%s" -c copy -bsf:a aac_adtstoasc -movflags +faststart %s`, allTs, mergeVideoUrl)
 	command := exec.Command("/bin/bash", "-c", cmd)
 	_, err = command.CombinedOutput()

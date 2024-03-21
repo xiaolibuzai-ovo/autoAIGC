@@ -42,9 +42,9 @@ func GenerateVideo(ctx context.Context) (err error) {
 		localVideos []string
 		localAudios []string
 
-		mergeAudioUrl string
-		subtitleUrl   string
-		mergeVideoUrl string
+		mergeAudioUrl    string
+		subtitleUrl      string
+		combinedVideoUrl string
 
 		wg sync.WaitGroup
 		mx sync.Mutex
@@ -107,24 +107,24 @@ func GenerateVideo(ctx context.Context) (err error) {
 		localAudios = append(localAudios, ttsUrl)
 	}
 	// 合成tts音频
-	mergeAudioUrl, err = MergeAudio(ctx, localAudios)
+	mergeAudioUrl, err = MergeAudioByFfmpeg(localAudios)
 	if err != nil {
 		return err
 	}
 	// 生成字幕
-	subtitleUrl, err = GenerateSubtitlesLocally(ctx, sentences, localVideos, "./tmp/Subtitles/")
+	subtitleUrl, err = GenerateSubtitlesLocally(ctx, sentences, localVideos, "./tmp/subtitles/")
 	if err != nil {
 		return err
 	}
 	// 合并视频
-	mergeVideoUrl, err = MergeVideo(ctx, localVideos)
+	combinedVideoUrl, err = MergeVideo(ctx, localVideos)
 	if err != nil {
 		return err
 	}
 
 	_ = mergeAudioUrl
 	_ = subtitleUrl
-	_ = mergeVideoUrl
+	_ = combinedVideoUrl
 	// 融合语音和视频
 
 	// 生成视频元数据信息(如标题/分类等)
