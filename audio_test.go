@@ -5,8 +5,8 @@ import (
 	"testing"
 )
 
-func TestMergeAudioByFfmpeg(t *testing.T) {
-	audio, err := MergeAudioByFfmpeg([]string{"/Users/limingzhi/go/src/autoAIGC/tmp/audio/16k16bit.mp3", "/Users/limingzhi/go/src/autoAIGC/tmp/audio/16k16bit.mp3"})
+func TestCombinedAudioByFfmpeg(t *testing.T) {
+	audio, err := CombinedAudioByFfmpeg([]string{"/Users/limingzhi/go/src/autoAIGC/tmp/audio/16k16bit.mp3", "/Users/limingzhi/go/src/autoAIGC/tmp/audio/16k16bit.mp3"})
 	if err != nil {
 		fmt.Println(err)
 		return

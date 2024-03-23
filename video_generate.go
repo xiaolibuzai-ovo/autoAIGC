@@ -34,6 +34,8 @@ const ( // 自动上传相关
 	AutoUploadBiliBili = false
 )
 
+// GenerateVideo 根据主题生成视频并配文与音频
+// TODO 调用时应提交一个异步任务 而不是同步等待
 func GenerateVideo(ctx context.Context) (err error) {
 	var (
 		subjectText string
@@ -42,9 +44,10 @@ func GenerateVideo(ctx context.Context) (err error) {
 		localVideos []string
 		localAudios []string
 
-		mergeAudioUrl    string
+		combinedAudioUrl string
 		subtitleUrl      string
 		combinedVideoUrl string
+		finalVideoUrl    string
 
 		wg sync.WaitGroup
 		mx sync.Mutex
@@ -107,7 +110,7 @@ func GenerateVideo(ctx context.Context) (err error) {
 		localAudios = append(localAudios, ttsUrl)
 	}
 	// 合成tts音频
-	mergeAudioUrl, err = MergeAudioByFfmpeg(localAudios)
+	combinedAudioUrl, err = CombinedAudioByFfmpeg(localAudios)
 	if err != nil {
 		return err
 	}
@@ -117,16 +120,16 @@ func GenerateVideo(ctx context.Context) (err error) {
 		return err
 	}
 	// 合并视频
-	combinedVideoUrl, err = MergeVideo(ctx, localVideos)
+	combinedVideoUrl, err = CombinedVideo(ctx, localVideos)
 	if err != nil {
 		return err
 	}
-
-	_ = mergeAudioUrl
-	_ = subtitleUrl
-	_ = combinedVideoUrl
 	// 融合语音和视频
-
+	finalVideoUrl, err = MixAllInfoForVideo(ctx, combinedVideoUrl, combinedAudioUrl, subtitleUrl)
+	if err != nil {
+		return
+	}
+	_ = finalVideoUrl
 	// 生成视频元数据信息(如标题/分类等)
 
 	// 自动上传相关

@@ -146,7 +146,7 @@ func MergeAudio(ctx context.Context, audioUrls []string) (audioUrl string, err e
 	}
 }
 
-func MergeAudioByFfmpeg(audioUrls []string) (mergeAudioUrl string, err error) {
+func CombinedAudioByFfmpeg(audioUrls []string) (mergeAudioUrl string, err error) {
 	var (
 		mergeAudioDir = "./tmp/mergeAudio/"
 	)
@@ -165,6 +165,9 @@ func MergeAudioByFfmpeg(audioUrls []string) (mergeAudioUrl string, err error) {
 	}
 	mergeAudioUrl = fmt.Sprintf("%s%d.mp3", mergeAudioDir, time.Now().UnixNano())
 	err = os.MkdirAll(filepath.Dir(mergeAudioUrl), os.ModePerm)
+	if err != nil {
+		return
+	}
 	cmd := fmt.Sprintf(`ffmpeg -f concat -safe 0 -i %s -c copy %s`, txtFile, mergeAudioUrl)
 	command := exec.Command("/bin/bash", "-c", cmd)
 	_, err = command.CombinedOutput()
