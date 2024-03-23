@@ -87,9 +87,9 @@ func SearchVideosInPexels(ctx context.Context, term string, limit int, minDurati
 		tmpLinkUrl := ""
 		for _, linkFile := range video.VideoFiles {
 			// 检查是否满足下赞路径
-			if !strings.Contains(linkFile.Link, ".com/external") {
-				continue
-			}
+			//if !strings.Contains(linkFile.Link, ".com/external") {
+			//	continue
+			//}
 			// 只保留分辨率更高的视频
 			if linkFile.Width*linkFile.Height < videoRatio {
 				continue

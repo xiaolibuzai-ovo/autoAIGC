@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-func TTS(ctx context.Context, voice string, content string) (voiceUrl string, err error) {
+func TTS(ctx context.Context, voice string, content string) (audioUrl string, err error) {
 	// TODO 先直接生成tts 后续对长句子切分生成
 	client := GetOpenaiClient()
 	speech, err := client.CreateSpeech(ctx, openai.CreateSpeechRequest{
@@ -27,21 +27,25 @@ func TTS(ctx context.Context, voice string, content string) (voiceUrl string, er
 		//ResponseFormat: openai.SpeechResponseFormatMp3, // default mp3
 	})
 	if err != nil {
+		fmt.Println(err)
 		return
 	}
 	defer speech.Close()
-
 	buf, err := io.ReadAll(speech)
 	if err != nil {
 		return
 	}
-	voiceUrl = fmt.Sprintf("./tmp/audio/%d.mp3", time.Now().UnixNano())
-	// save buf to file as mp3
-	err = os.WriteFile(voiceUrl, buf, 777)
+	audioUrl = fmt.Sprintf("./tmp/audio/%d.mp3", time.Now().UnixNano())
+	err = os.MkdirAll(filepath.Dir(audioUrl), os.ModePerm)
 	if err != nil {
 		return
 	}
-	return voiceUrl, nil
+	// save buf to file as mp3
+	err = os.WriteFile(audioUrl, buf, 777)
+	if err != nil {
+		return
+	}
+	return audioUrl, nil
 }
 
 type MergeAudioResponse struct {
@@ -156,8 +160,10 @@ func CombinedAudioByFfmpeg(audioUrls []string) (mergeAudioUrl string, err error)
 		return
 	}
 	for i, audioUrl := range audioUrls {
+		audioUrl = audioUrl[1:] // 去掉相对路径的点
 		audioUrls[i] = fmt.Sprintf("%s%s", pwd, audioUrl)
 	}
+
 	// 合并所有文件
 	txtFile, err := CreateTxtFileWithDynamicContent(audioUrls)
 	if err != nil {

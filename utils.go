@@ -125,7 +125,10 @@ func handleErrorResp(resp *http.Response) error {
 func SaveFileLocal(fileUrl string, directory string, fileName string) (string, error) {
 	// Create full video path
 	videoPath := filepath.Join(directory, fileName)
-
+	err := os.MkdirAll(filepath.Dir(videoPath), os.ModePerm)
+	if err != nil {
+		return "", err
+	}
 	// Make GET request to fetch video content
 	response, err := http.Get(fileUrl)
 	if err != nil {
@@ -140,7 +143,7 @@ func SaveFileLocal(fileUrl string, directory string, fileName string) (string, e
 	}
 
 	// Create video file and write content
-	err = ioutil.WriteFile(videoPath, videoContent, 0644)
+	err = ioutil.WriteFile(videoPath, videoContent, 777)
 	if err != nil {
 		return "", err
 	}
